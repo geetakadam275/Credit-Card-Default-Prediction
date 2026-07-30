@@ -222,4 +222,4 @@ The Logistic Regression and Decision Tree models were trained and evaluated usin
 
 **Geeta Kadam**
 
-GitHub: https://github.com/YOUR_GITHUB_USERNAME
+GitHub: https://github.com/geetakadam275/Credit-Card-Default-Prediction
