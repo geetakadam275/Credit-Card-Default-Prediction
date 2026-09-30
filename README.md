@@ -1,22 +1,20 @@
 # 🏦 Credit Card Default Prediction
 
+[![Vercel Deployment](https://img.shields.io/badge/Deploy-Vercel-black?style=flat&logo=vercel)](https://vercel.com)
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue?style=flat&logo=python)](https://python.org)
+[![Scikit-Learn](https://img.shields.io/badge/Model-Decision%20Tree%20(81.78%25)-orange?style=flat&logo=scikit-learn)](https://scikit-learn.org)
+[![Flask](https://img.shields.io/badge/Backend-Flask%20WSGI-lightgrey?style=flat&logo=flask)](https://flask.palletsprojects.com)
+
 ## 📌 Project Overview
 
-This project predicts whether a credit card customer is likely to default on the next month's payment using Machine Learning techniques. The project follows a complete end-to-end machine learning workflow, including data preprocessing, feature engineering, model building, and evaluation.
+This project predicts whether a credit card customer is likely to default on their next month's payment using Machine Learning. The repository contains a complete end-to-end machine learning pipeline from exploratory data analysis and feature engineering to a live web application deployed on **Vercel Functions** and **Streamlit**.
 
 The project includes:
-
-- Data Loading
-- Data Cleaning
-- Exploratory Data Analysis (EDA)
-- Feature Engineering
-- Weight of Evidence (WoE)
-- Information Value (IV)
-- Variance Inflation Factor (VIF)
-- Logistic Regression
-- Decision Tree
-- Hyperparameter Tuning
-- Model Evaluation
+- **Data Exploration & Cleaning**: Handling anomalies, distributions, and collinearity.
+- **Feature Analysis**: Weight of Evidence (WoE), Information Value (IV), and Variance Inflation Factor (VIF).
+- **Model Training**: Logistic Regression and Decision Tree Classifier trained on 30,000 UCI credit client records.
+- **Production Web Application**: A modern interactive dashboard built with Flask and styled with responsive cards, live risk meter, and explainable risk factors.
+- **Serverless API**: JSON endpoints (`POST /predict` and `GET /health`) optimized for Vercel Serverless Functions.
 
 ---
 
@@ -25,201 +23,144 @@ The project includes:
 ```
 Credit-Card-Default-Prediction/
 │
-├── Credit_Card_Default_Prediction.ipynb
-├── credit_card_default.csv
-├── credit_card_default_clean.csv
-├── credit_card_default_feature_engineered.csv
-├── credit_card_default_vif.csv
-├── information_value.csv
-├── Decision_Tree.png
-├── Workflow.md
-├── README.md
-├── requirements.txt
-└── .gitignore
+├── api/
+│   └── index.py                      # Vercel serverless entrypoint importing Flask app
+├── templates/
+│   └── index.html                    # Modern interactive fintech web UI
+├── app.py                            # Flask application exporting top-level "app" for Vercel
+├── streamlit_app.py                  # Streamlit web interface for local or Streamlit Cloud use
+├── credit_default_model.pkl          # Trained Decision Tree model (81.78% test accuracy)
+├── UCI_Credit_Card.csv               # UCI credit card clients dataset (30,000 records)
+├── Credit_Card_Default_Prediction.ipynb # Jupyter notebook with full EDA & training pipeline
+├── vercel.json                       # Vercel routing and rewrite configuration
+├── requirements.txt                  # Production dependencies optimized for Vercel
+├── Workflow.md                       # Machine learning workflow documentation
+├── README.md                         # Project documentation
+└── .gitignore                        # Git ignore patterns
 ```
 
 ---
 
-## 📊 Dataset
+## 📊 Dataset & Model
 
-The dataset contains customer demographic, payment history, bill amount, and payment amount information used to predict whether a customer will default on the next month's credit card payment.
+The dataset contains customer demographic information, credit limit, repayment history across 6 months, bill statement amounts, and previous payment amounts.
 
 ### Target Variable
+- **0 → No Default (Good Customer)**
+- **1 → Default (Delinquent Customer)**
 
-- **0 → No Default**
-- **1 → Default**
-
----
-
-## 🛠️ Technologies Used
-
-- Python
-- Pandas
-- NumPy
-- Matplotlib
-- Seaborn
-- Scikit-learn
-- Statsmodels
-- Jupyter Notebook
-- Git & GitHub
+### Evaluated Model: Decision Tree Classifier
+- **Parameters**: `criterion='gini'`, `max_depth=5`, `random_state=42`
+- **Test Accuracy**: **81.78%**
+- **Top Predictive Features**:
+  1. `PAY_0` (September repayment status) - 67.97% importance
+  2. `PAY_2` (August repayment status) - 13.76% importance
+  3. `PAY_AMT3` (July payment amount) - 4.28% importance
+  4. `LIMIT_BAL` (Credit limit) - 2.19% importance
 
 ---
 
-## 📈 Project Workflow
+## 🚀 Deployment on Vercel
 
-### 1. Data Loading
+This repository is pre-configured to deploy on Vercel with zero extra build commands:
 
-- Imported required libraries
-- Loaded dataset
-- Checked dataset shape
-- Verified data types
+1. Import this repository into [Vercel](https://vercel.com/new).
+2. Framework Preset: **Other** (Vercel automatically detects Python via `app.py` / `api/index.py`).
+3. Root Directory: `./`
+4. Click **Deploy**.
 
----
-
-### 2. Data Cleaning
-
-- Checked missing values
-- Removed duplicate records
-- Verified data consistency
-- Saved cleaned dataset
+Vercel will install dependencies from `requirements.txt` and serve the application via serverless Python execution.
 
 ---
 
-### 3. Exploratory Data Analysis (EDA)
+## 💻 Running Locally
 
-Performed:
+### Option 1: Run the Flask Web App (Same as Vercel)
 
-- Dataset overview
-- Statistical summary
-- Missing value analysis
-- Duplicate record analysis
-- Correlation analysis
-- Outlier detection
-- Skewness analysis
+```bash
+# Clone the repository
+git clone https://github.com/geetakadam275/Credit-Card-Default-Prediction.git
+cd Credit-Card-Default-Prediction
 
----
+# Install dependencies
+pip install -r requirements.txt
 
-### 4. Feature Engineering
+# Start the Flask development server
+python app.py
+```
+Open your browser at `http://127.0.0.1:5000` to access the dashboard.
 
-Applied:
+### Option 2: Run the Streamlit Interface
 
-- Feature selection
-- Feature scaling
-- Train-Test Split
-- Prepared dataset for modeling
-
----
-
-### 5. Weight of Evidence (WoE)
-
-Performed:
-
-- Variable binning
-- Good and Bad distribution
-- WoE calculation
-- WoE transformation
+```bash
+pip install streamlit
+streamlit run streamlit_app.py
+```
 
 ---
 
-### 6. Information Value (IV)
+## 🔌 REST API Documentation
 
-Performed:
+### 1. Predict Default Risk
+- **Endpoint**: `POST /predict`
+- **Headers**: `Content-Type: application/json`
+- **Sample Request**:
+```json
+{
+  "ID": 101,
+  "LIMIT_BAL": 150000,
+  "SEX": 2,
+  "EDUCATION": 1,
+  "MARRIAGE": 2,
+  "AGE": 32,
+  "PAY_0": -1,
+  "PAY_2": -1,
+  "PAY_3": -1,
+  "PAY_4": -1,
+  "PAY_5": -1,
+  "PAY_6": -1,
+  "BILL_AMT1": 5000,
+  "BILL_AMT2": 4800,
+  "BILL_AMT3": 5100,
+  "BILL_AMT4": 4900,
+  "BILL_AMT5": 5300,
+  "BILL_AMT6": 4700,
+  "PAY_AMT1": 5000,
+  "PAY_AMT2": 4800,
+  "PAY_AMT3": 5100,
+  "PAY_AMT4": 4900,
+  "PAY_AMT5": 5300,
+  "PAY_AMT6": 4700
+}
+```
 
-- IV calculation
-- Feature ranking
-- Predictor strength analysis
+- **Sample Response**:
+```json
+{
+  "confidence": 90.9,
+  "insights": [
+    "Recent repayment status is current or settled duly.",
+    "Healthy credit utilization (3.3%).",
+    "Paid total outstanding balance in full in September."
+  ],
+  "prediction": 0,
+  "probability_default": 9.1,
+  "probability_no_default": 90.9,
+  "risk_category": "Low Risk",
+  "risk_class": "success",
+  "status_label": "No Default",
+  "success": true
+}
+```
 
----
-
-### 7. Variance Inflation Factor (VIF)
-
-Performed:
-
-- Multicollinearity analysis
-- VIF calculation
-- Removed high VIF features (if required)
-
----
-
-### 8. Model Building
-
-Implemented:
-
-- Logistic Regression
-- Decision Tree Classifier
-
-Performed:
-
-- Model training
-- Prediction
-- Feature importance analysis
-
----
-
-### 9. Hyperparameter Tuning
-
-Performed:
-
-- GridSearchCV
-- Best parameter selection
-- Optimized Decision Tree model
-
----
-
-### 10. Model Evaluation
-
-Evaluated using:
-
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-- Confusion Matrix
-- Classification Report
-
-Also included:
-
-- Decision Tree Visualization
-- Feature Importance Analysis
-
----
-
-## 📌 Machine Learning Concepts Covered
-
-- Binary Classification
-- Data Preprocessing
-- Feature Engineering
-- Weight of Evidence (WoE)
-- Information Value (IV)
-- Multicollinearity
-- Variance Inflation Factor (VIF)
-- Logistic Regression
-- Decision Tree
-- Hyperparameter Tuning
-- GridSearchCV
-- Model Evaluation
-
----
-
-## 📊 Model Performance
-
-The Logistic Regression and Decision Tree models were trained and evaluated using multiple classification metrics. Their performance was compared to determine the most suitable model for predicting credit card default risk.
-
----
-
-## 🚀 Future Improvements
-
-- Random Forest Classifier
-- XGBoost Classifier
-- LightGBM
-- ROC-AUC Analysis
-- Model Deployment using Streamlit or Flask
-- Interactive Dashboard
+### 2. Healthcheck
+- **Endpoint**: `GET /health`
+- **Response**: `{"features_expected": 24, "model_loaded": true, "platform": "Vercel / Flask Serverless", "status": "healthy"}`
 
 ---
 
 ## 👩‍💻 Author
 
-**Geeta Kadam**
-
-GitHub: https://github.com/geetakadam275/Credit-Card-Default-Prediction
+**Geeta Kadam**  
+GitHub: [geetakadam275](https://github.com/geetakadam275)  
+Repository: [Credit-Card-Default-Prediction](https://github.com/geetakadam275/Credit-Card-Default-Prediction)

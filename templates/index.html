@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Default Risk Predictor | ML Intelligence</title>
+    <meta name="description" content="Predict credit card customer default risk using a high-precision Decision Tree machine learning model with real-time risk score analysis.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-card: rgba(22, 30, 49, 0.75);
+            --bg-card-hover: rgba(30, 41, 67, 0.85);
+            --bg-input: #0f172a;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-indigo: #6366f1;
+            --accent-cyan: #06b6d4;
+            --risk-low: #10b981;
+            --risk-low-bg: rgba(16, 185, 129, 0.12);
+            --risk-mod: #f59e0b;
+            --risk-mod-bg: rgba(245, 158, 11, 0.12);
+            --risk-high: #ef4444;
+            --risk-high-bg: rgba(239, 68, 68, 0.15);
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --shadow-glow: 0 0 35px -5px rgba(59, 130, 246, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.12) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding-bottom: 60px;
+        }
+
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header Navbar */
+        header {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+        }
+
+        .logo-text h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .header-badges {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .badge-pill {
+            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* Hero section */
+        .hero {
+            padding: 40px 0 24px;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 0 auto 24px;
+        }
+
+        /* Preset buttons */
+        .presets-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .preset-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: #93c5fd;
+        }
+
+        /* Main layout grid */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .card-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title-icon {
+            color: var(--accent-blue);
+        }
+
+        /* Form sections */
+        .section-block {
+            margin-bottom: 28px;
+        }
+
+        .section-heading {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .label-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        input, select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            outline: none;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Actions */
+        .form-actions {
+            margin-top: 32px;
+            display: flex;
+            gap: 14px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        /* Prediction Result Panel (Sticky) */
+        .result-panel {
+            position: sticky;
+            top: 100px;
+        }
+
+        .result-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-illustration {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        /* Active Result display */
+        .result-active {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-danger {
+            background: var(--risk-high-bg);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-success {
+            background: var(--risk-low-bg);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-warning {
+            background: var(--risk-mod-bg);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .result-headline {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+        }
+
+        .result-subhead {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 24px;
+        }
+
+        /* Meter bar */
+        .meter-container {
+            margin-bottom: 24px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .meter-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .meter-bar-track {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fill-danger {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        .fill-success {
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+        }
+
+        .fill-warning {
+            background: linear-gradient(90deg, #3b82f6, #f59e0b);
+        }
+
+        /* Insights list */
+        .insights-box {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .insights-title {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        .insights-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .insights-list li {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .insights-list li::before {
+            content: "•";
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer info */
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 24px;
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">💳</div>
+                <div class="logo-text">
+                    <h1>Credit Risk AI</h1>
+                    <span>Decision Tree Inference • Vercel</span>
+                </div>
+            </a>
+            <div class="header-badges">
+                <div class="badge-pill">
+                    <span class="badge-dot"></span>
+                    <span>Model: 81.78% Accuracy</span>
+                </div>
+                <div class="badge-pill">
+                    <span>Vercel Serverless Ready</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h2>Credit Card Default Prediction</h2>
+            <p>
+                Analyze credit card accounts with a machine learning Decision Tree model trained on 30,000 UCI financial client records to forecast default probability with instant explainability.
+            </p>
+
+            <div class="presets-wrapper">
+                <span style="font-size: 0.85rem; color: var(--text-muted); align-self: center;">Quick Load Presets:</span>
+                <button type="button" class="preset-btn" onclick="loadPreset('low_risk')">
+                    <span>🟢</span> Low Risk Profile
+                </button>
+                <button type="button" class="preset-btn" onclick="loadPreset('moderate_risk')">
+                    <span>🟡</span> Moderate Risk Profile
+                </button>
+                <button type="button" class="preset-btn" onclick="loadPreset('high_risk')">
+                    <span>🔴</span> High Risk Profile
+                </button>
+                <button type="button" class="preset-btn" onclick="resetForm()">
+                    <span>↺</span> Clear Form
+                </button>
+            </div>
+        </section>
+
+        <div class="main-layout">
+            <!-- Left: Input Form Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-title-icon">⚙️</span>
+                        <span>Customer Financial Parameters</span>
+                    </div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">24 Evaluated Features</span>
+                </div>
+
+                <form id="predictionForm" onsubmit="handlePrediction(event)">
+
+                    <!-- 1. Personal & Credit Profile -->
+                    <div class="section-block">
+                        <div class="section-heading">1. Demographics & Credit Baseline</div>
+                        <div class="inputs-grid">
+                            <div class="form-group">
+                                <label for="ID">Customer ID</label>
+                                <input type="number" id="ID" name="ID" value="101" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="LIMIT_BAL">Credit Limit (NT$)</label>
+                                <input type="number" id="LIMIT_BAL" name="LIMIT_BAL" value="150000" step="1000" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="SEX">Sex</label>
+                                <select id="SEX" name="SEX">
+                                    <option value="1">1 - Male</option>
+                                    <option value="2" selected>2 - Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="EDUCATION">Education</label>
+                                <select id="EDUCATION" name="EDUCATION">
+                                    <option value="1" selected>1 - Graduate School</option>
+                                    <option value="2">2 - University</option>
+                                    <option value="3">3 - High School</option>
+                                    <option value="4">4 - Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="MARRIAGE">Marital Status</label>
+                                <select id="MARRIAGE" name="MARRIAGE">
+                                    <option value="1">1 - Married</option>
+                                    <option value="2" selected>2 - Single</option>
+                                    <option value="3">3 - Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="AGE">Age (Years)</label>
+                                <input type="number" id="AGE" name="AGE" value="32" min="18" max="100" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Repayment Statuses -->
+                    <div class="section-block">
+                        <div class="section-heading">2. Repayment History (-1 = Duly, 0 = Revolving, 1+ = Months Delayed)</div>
+                        <div class="inputs-grid">
+                            <div class="form-group">
+                                <label for="PAY_0">September (PAY_0)</label>
+                                <input type="number" id="PAY_0" name="PAY_0" value="-1" min="-2" max="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_2">August (PAY_2)</label>
+                                <input type="number" id="PAY_2" name="PAY_2" value="-1" min="-2" max="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_3">July (PAY_3)</label>
+                                <input type="number" id="PAY_3" name="PAY_3" value="-1" min="-2" max="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_4">June (PAY_4)</label>
+                                <input type="number" id="PAY_4" name="PAY_4" value="-1" min="-2" max="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_5">May (PAY_5)</label>
+                                <input type="number" id="PAY_5" name="PAY_5" value="-1" min="-2" max="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_6">April (PAY_6)</label>
+                                <input type="number" id="PAY_6" name="PAY_6" value="-1" min="-2" max="8" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Monthly Bill Statements -->
+                    <div class="section-block">
+                        <div class="section-heading">3. Monthly Statement Balances (NT$)</div>
+                        <div class="inputs-grid">
+                            <div class="form-group">
+                                <label for="BILL_AMT1">Bill - Sept</label>
+                                <input type="number" id="BILL_AMT1" name="BILL_AMT1" value="5000" step="500" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="BILL_AMT2">Bill - Aug</label>
+                                <input type="number" id="BILL_AMT2" name="BILL_AMT2" value="4800" step="500" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="BILL_AMT3">Bill - Jul</label>
+                                <input type="number" id="BILL_AMT3" name="BILL_AMT3" value="5100" step="500" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="BILL_AMT4">Bill - Jun</label>
+                                <input type="number" id="BILL_AMT4" name="BILL_AMT4" value="4900" step="500" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="BILL_AMT5">Bill - May</label>
+                                <input type="number" id="BILL_AMT5" name="BILL_AMT5" value="5300" step="500" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="BILL_AMT6">Bill - Apr</label>
+                                <input type="number" id="BILL_AMT6" name="BILL_AMT6" value="4700" step="500" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Monthly Payments Made -->
+                    <div class="section-block">
+                        <div class="section-heading">4. Monthly Payments Settled (NT$)</div>
+                        <div class="inputs-grid">
+                            <div class="form-group">
+                                <label for="PAY_AMT1">Paid - Sept</label>
+                                <input type="number" id="PAY_AMT1" name="PAY_AMT1" value="5000" step="500" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_AMT2">Paid - Aug</label>
+                                <input type="number" id="PAY_AMT2" name="PAY_AMT2" value="4800" step="500" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_AMT3">Paid - Jul</label>
+                                <input type="number" id="PAY_AMT3" name="PAY_AMT3" value="5100" step="500" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_AMT4">Paid - Jun</label>
+                                <input type="number" id="PAY_AMT4" name="PAY_AMT4" value="4900" step="500" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_AMT5">Paid - May</label>
+                                <input type="number" id="PAY_AMT5" name="PAY_AMT5" value="5300" step="500" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="PAY_AMT6">Paid - Apr</label>
+                                <input type="number" id="PAY_AMT6" name="PAY_AMT6" value="4700" step="500" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="submitBtn" class="btn-primary">
+                            <div class="spinner" id="btnSpinner"></div>
+                            <span id="btnText">Predict Default Risk</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right: Sticky Live Result Display -->
+            <div class="result-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>📊 Analysis & Assessment</span>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder State -->
+                    <div id="resultEmpty" class="result-empty">
+                        <div class="empty-illustration">📈</div>
+                        <h3 style="color: var(--text-primary); font-size: 1.05rem; margin-bottom: 6px;">Ready for Evaluation</h3>
+                        <p style="font-size: 0.85rem;">Click "Predict Default Risk" or choose a quick preset to view model confidence and default risk.</p>
+                    </div>
+
+                    <!-- Active Result State -->
+                    <div id="resultActive" class="result-active">
+                        <div id="riskBadge" class="risk-badge badge-success">
+                            <span id="riskBadgeIcon">●</span>
+                            <span id="riskBadgeText">Low Risk</span>
+                        </div>
+
+                        <div id="resultHeadline" class="result-headline">No Default</div>
+                        <div id="resultSubhead" class="result-subhead">Customer is highly likely to meet payment obligations.</div>
+
+                        <!-- Risk Meter -->
+                        <div class="meter-container">
+                            <div class="meter-label-row">
+                                <span style="color: var(--text-secondary);">Default Probability</span>
+                                <span id="meterDefaultProb" style="color: #f87171; font-weight: 700;">9.1%</span>
+                            </div>
+                            <div class="meter-bar-track">
+                                <div id="meterFill" class="meter-bar-fill fill-success" style="width: 9.1%;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;">
+                                <span>Safe (&lt;25%)</span>
+                                <span>Moderate (25-50%)</span>
+                                <span>High (&gt;50%)</span>
+                            </div>
+                        </div>
+
+                        <!-- Key Factors -->
+                        <div class="insights-box">
+                            <div class="insights-title">Key Risk Drivers</div>
+                            <ul id="insightsList" class="insights-list">
+                                <li>Repayment record indicates disciplined repayment habits.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px; padding: 20px;">
+                    <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">API Endpoint Reference</div>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
+                        Integrate directly into external apps or workflows:
+                    </p>
+                    <code style="display: block; background: var(--bg-input); padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; color: #93c5fd; overflow-x: auto;">
+                        POST /predict (JSON payload)
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Credit Card Default Prediction • Deployed on Vercel Functions • Decision Tree Classifier
+        </footer>
+    </main>
+
+    <script>
+        const sampleProfiles = {
+            low_risk: {
+                ID: 101, LIMIT_BAL: 200000, SEX: 2, EDUCATION: 1, MARRIAGE: 2, AGE: 32,
+                PAY_0: -1, PAY_2: -1, PAY_3: -1, PAY_4: -1, PAY_5: -1, PAY_6: -1,
+                BILL_AMT1: 5200, BILL_AMT2: 4800, BILL_AMT3: 5100, BILL_AMT4: 4900, BILL_AMT5: 5300, BILL_AMT6: 4700,
+                PAY_AMT1: 5200, PAY_AMT2: 4800, PAY_AMT3: 5100, PAY_AMT4: 4900, PAY_AMT5: 5300, PAY_AMT6: 4700
+            },
+            high_risk: {
+                ID: 202, LIMIT_BAL: 30000, SEX: 1, EDUCATION: 2, MARRIAGE: 1, AGE: 26,
+                PAY_0: 2, PAY_2: 2, PAY_3: 2, PAY_4: 0, PAY_5: 0, PAY_6: 0,
+                BILL_AMT1: 28500, BILL_AMT2: 29000, BILL_AMT3: 29200, BILL_AMT4: 28000, BILL_AMT5: 27500, BILL_AMT6: 26000,
+                PAY_AMT1: 0, PAY_AMT2: 1000, PAY_AMT3: 0, PAY_AMT4: 500, PAY_AMT5: 0, PAY_AMT6: 0
+            },
+            moderate_risk: {
+                ID: 303, LIMIT_BAL: 80000, SEX: 2, EDUCATION: 2, MARRIAGE: 1, AGE: 41,
+                PAY_0: 1, PAY_2: 0, PAY_3: 0, PAY_4: 0, PAY_5: 0, PAY_6: 0,
+                BILL_AMT1: 45000, BILL_AMT2: 42000, BILL_AMT3: 39000, BILL_AMT4: 35000, BILL_AMT5: 31000, BILL_AMT6: 28000,
+                PAY_AMT1: 2000, PAY_AMT2: 2000, PAY_AMT3: 1800, PAY_AMT4: 1500, PAY_AMT5: 1500, PAY_AMT6: 1200
+            }
+        };
+
+        function loadPreset(type) {
+            const data = sampleProfiles[type];
+            if (!data) return;
+
+            for (const [key, val] of Object.entries(data)) {
+                const el = document.getElementById(key);
+                if (el) el.value = val;
+            }
+
+            // Automatically trigger prediction for instant preview
+            handlePrediction(new Event('submit'));
+        }
+
+        function resetForm() {
+            document.getElementById('predictionForm').reset();
+            document.getElementById('resultEmpty').style.display = 'block';
+            document.getElementById('resultActive').style.display = 'none';
+        }
+
+        async function handlePrediction(e) {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const form = document.getElementById('predictionForm');
+            const formData = new FormData(form);
+            const payload = {};
+            formData.forEach((value, key) => { payload[key] = value; });
+
+            const btnSpinner = document.getElementById('btnSpinner');
+            const btnText = document.getElementById('btnText');
+            btnSpinner.style.display = 'block';
+            btnText.innerText = 'Evaluating Model...';
+
+            try {
+                const resp = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await resp.json();
+                if (data.success) {
+                    displayResult(data);
+                } else {
+                    alert('Prediction failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error while contacting inference server.');
+            } finally {
+                btnSpinner.style.display = 'none';
+                btnText.innerText = 'Predict Default Risk';
+            }
+        }
+
+        function displayResult(data) {
+            document.getElementById('resultEmpty').style.display = 'none';
+            const activePanel = document.getElementById('resultActive');
+            activePanel.style.display = 'block';
+
+            const badge = document.getElementById('riskBadge');
+            const badgeIcon = document.getElementById('riskBadgeIcon');
+            const badgeText = document.getElementById('riskBadgeText');
+            const headline = document.getElementById('resultHeadline');
+            const subhead = document.getElementById('resultSubhead');
+            const meterFill = document.getElementById('meterFill');
+            const meterDefaultProb = document.getElementById('meterDefaultProb');
+            const insightsList = document.getElementById('insightsList');
+
+            // Format risk classes
+            badge.className = 'risk-badge';
+            meterFill.className = 'meter-bar-fill';
+
+            if (data.prediction === 1 || data.probability_default >= 50) {
+                badge.classList.add('badge-danger');
+                meterFill.classList.add('fill-danger');
+                badgeIcon.innerText = '⚠️';
+                badgeText.innerText = 'High Risk of Default';
+                headline.innerText = 'Default Risk Detected';
+                headline.style.color = '#f87171';
+                subhead.innerText = 'Customer exhibits high delinquency markers. Caution recommended.';
+            } else if (data.probability_default >= 25) {
+                badge.classList.add('badge-warning');
+                meterFill.classList.add('fill-warning');
+                badgeIcon.innerText = '⚡';
+                badgeText.innerText = 'Moderate Risk';
+                headline.innerText = 'Revolving Caution';
+                headline.style.color = '#fbbf24';
+                subhead.innerText = 'Customer has minor delays or revolving credit balances.';
+            } else {
+                badge.classList.add('badge-success');
+                meterFill.classList.add('fill-success');
+                badgeIcon.innerText = '✓';
+                badgeText.innerText = 'Low Risk (Healthy)';
+                headline.innerText = 'No Default Expected';
+                headline.style.color = '#34d399';
+                subhead.innerText = 'Account displays consistent, timely repayment history.';
+            }
+
+            // Meter animation
+            const prob = data.probability_default;
+            meterDefaultProb.innerText = prob.toFixed(1) + '%';
+            meterFill.style.width = Math.min(Math.max(prob, 3), 100) + '%';
+
+            // Key insights
+            insightsList.innerHTML = '';
+            if (data.insights && data.insights.length > 0) {
+                data.insights.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerText = item;
+                    insightsList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.innerText = 'All monitored indicators within normal parameters.';
+                insightsList.appendChild(li);
+            }
+        }
+    </script>
+</body>
+</html>
