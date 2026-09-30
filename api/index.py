@@ -1,5 +1,5 @@
 from app import app
 
-# Top-level ASGI/WSGI entrypoint for Vercel Serverless Functions
-if __name__ == "__main__":
-    app.run()
+# Expose WSGI / ASGI entrypoints for all Vercel runtime variants
+application = app
+handler = app

@@ -6,10 +6,32 @@ from flask import Flask, render_template, request, jsonify
 
 # Top-level WSGI application required by Vercel Python runtime
 app = Flask(__name__)
+application = app
+handler = app
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "credit_default_model.pkl")
 CSV_PATH = os.path.join(BASE_DIR, "UCI_Credit_Card.csv")
+
+# WSGI Middleware to normalize Vercel serverless prefix rewrites
+class VercelPrefixMiddleware:
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        path_info = environ.get("PATH_INFO", "")
+        # Strip common Vercel serverless function prefixes
+        prefixes = ["/api/index.py", "/api/index", "/api", "/app.py", "/app"]
+        for prefix in prefixes:
+            if path_info == prefix:
+                environ["PATH_INFO"] = "/"
+                break
+            elif path_info.startswith(prefix + "/"):
+                environ["PATH_INFO"] = path_info[len(prefix):]
+                break
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPrefixMiddleware(app.wsgi_app)
 
 # 24 model features in exact training order
 FEATURES = [
@@ -231,12 +253,17 @@ def generate_insights(df_row, proba_default):
     return factors
 
 @app.route("/", methods=["GET"])
+@app.route("/api", methods=["GET"])
+@app.route("/api/index", methods=["GET"])
+@app.route("/api/index.py", methods=["GET"])
 def index():
     """Render the dashboard UI."""
     return render_template("index.html", default_profile=SAMPLE_PROFILES["low_risk"]["data"])
 
 @app.route("/predict", methods=["POST"])
 @app.route("/api/predict", methods=["POST"])
+@app.route("/api/index/predict", methods=["POST"])
+@app.route("/api/index.py/predict", methods=["POST"])
 def predict():
     """Predict credit card default risk from JSON or form payload."""
     try:
@@ -295,6 +322,7 @@ def get_samples():
     return jsonify(SAMPLE_PROFILES)
 
 @app.route("/health", methods=["GET"])
+@app.route("/api/health", methods=["GET"])
 def health():
     """Vercel / monitoring healthcheck endpoint."""
     model = get_model()
@@ -304,6 +332,13 @@ def health():
         "features_expected": len(FEATURES),
         "platform": "Vercel / Flask Serverless"
     })
+
+# Fallback: If any GET request doesn't match an exact route, gracefully serve the dashboard UI
+@app.errorhandler(404)
+def not_found(e):
+    if request.method == "GET":
+        return render_template("index.html", default_profile=SAMPLE_PROFILES["low_risk"]["data"]), 200
+    return jsonify({"success": False, "error": "Endpoint not found"}), 404
 
 if __name__ == "__main__":
     # Local development server
